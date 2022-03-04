@@ -16,7 +16,7 @@ pub struct Player{
 struct Lottery {    
     lottery_owner: ActorId,                     //Хозяин лотереи
     players: BTreeMap<u32, Player>,             //Игроки
-    lottery_history: BTreeMap<ActorId, u128>,   //Список победителей
+    lottery_history: BTreeMap<u64, ActorId>,   //Список победителей
     lottery_id: u64,                            //Id текущей лотереи
 }
 
@@ -27,10 +27,10 @@ pub enum Action {
     
 }
 
-/*#[derive(Debug, Encode, Decode, TypeInfo)]
+#[derive(Debug, Encode, Decode, TypeInfo)]
 pub enum Event {
-    
-}*/
+    Winner(ActorId),    //Победитель
+}
 
 /*#[derive(Debug, Encode, Decode, TypeInfo)]
 pub enum State {
@@ -73,19 +73,24 @@ impl Lottery {
     }
 
     fn pick_winner(&mut self){
-        let index: u32 = (self.get_random_number() % (self.players.len() as u128)) as u32;
-        //let win_player: Player = self.players.get(&index);
+        let index: u32 = (self.get_random_number() % (self.players.len() as u128)) as u32;        
 
         if let Some(win_player) = self.players.get(&index){
-            msg::send_bytes(win_player.player, b"Winner", exec::value_available());        
+            msg::send_bytes(win_player.player, b"Winner", exec::value_available());     
+            self.lottery_history.insert(self.lottery_id, win_player.player);      
+            msg::reply(Event::Winner(win_player.player), 0);  
         }
         else{
             debug!("win player Index error");
         }
+
+        self.players = BTreeMap::new();
+        self.lottery_id += 1;
     }
 }
 
 static mut LOTTERY: Option<Lottery> = None;
+
 #[no_mangle]
 pub unsafe extern "C" fn handle() {
     let action: Action = msg::load().expect("Could not load Action");

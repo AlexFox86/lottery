@@ -158,3 +158,12 @@ pub unsafe extern "C" fn init() {
 
     LOTTERY = Some(lottery);
 }
+
+gstd::metadata! {
+    title: "Lottery",
+        init:
+            input: ActorId,
+        handle:
+            input: Action,
+            output: Event,
+}

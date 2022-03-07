@@ -1,16 +1,10 @@
 #![no_std]
-//#![feature(const_btree_new)]
 
+use lt_io::*;
 use codec::{Decode, Encode};
 use gstd::{debug, exec, msg, prelude::*, ActorId};
 use scale_info::TypeInfo;
 use sp_core::hashing::blake2_256;
-
-#[derive(Debug, Default, Encode, Decode, TypeInfo, Clone)]
-struct Player {
-    player: ActorId,
-    balance: u128,
-}
 
 #[derive(Debug, Default, Encode, Decode, TypeInfo)]
 struct Lottery {
@@ -18,24 +12,6 @@ struct Lottery {
     players: BTreeMap<u32, Player>,          //Игроки
     lottery_history: BTreeMap<u32, ActorId>, //Список победителей
     lottery_id: u32,                         //Id текущей лотереи
-}
-
-#[derive(Debug, Decode, Encode, TypeInfo)]
-enum Action {
-    Enter(ActorId), //Новый игрок
-    Start,          //Запуск лотереи
-    BalanceOf(u32), //Запрос баланса
-    GetPlayers,     //Запрос списка
-    DelPlayer(u32), //Удалить игрока
-    AddValue(u32),  //Увеличить баланс
-}
-
-#[derive(Debug, Encode, Decode, TypeInfo)]
-enum Event {
-    Winner(ActorId),                //Победитель
-    Balance(u128),                  //Баланс
-    Players(BTreeMap<u32, Player>), //Игроки
-    PlayerAdded(u32),               //Игрок добавлен(Индекс)
 }
 
 impl Lottery {

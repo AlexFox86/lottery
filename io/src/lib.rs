@@ -27,3 +27,17 @@ pub enum Event {
     Players(BTreeMap<u32, Player>), //Игроки
     PlayerAdded(u32),               //Игрок добавлен(Индекс)
 }
+
+#[derive(Debug, Encode, Decode, TypeInfo)]
+pub enum State {
+    GetWinner,
+    GetPlayers,
+    BalanceOf(u32),
+}
+
+#[derive(Debug, Encode, Decode, TypeInfo)]
+pub enum StateReply {
+    Winner(ActorId),
+    Players(BTreeMap<u32, Player>),
+    Balance(u128),
+}

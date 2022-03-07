@@ -135,6 +135,29 @@ pub unsafe extern "C" fn init() {
     LOTTERY = Some(lottery);
 }
 
+#[no_mangle]
+pub unsafe extern "C" fn meta_state() -> *mut [i32; 2] {
+    let query: State = msg::load().expect("failed to decode input argument");
+    let lottery: &mut Lottery = LOTTERY.get_or_insert(Lottery::default());
+
+    let encoded = match query {
+        State::GetPlayers => {StateReply::Players(lottery.players.clone()).encode();           }
+        
+        State::BalanceOf(index) => {
+            if let Some(player) = lottery.players.get(&index) {
+                StateReply::Balance(player.balance).encode();
+            }
+        }
+    };
+
+    let result = gstd::macros::util::to_wasm_ptr(&(encoded[..]));
+    core::mem::forget(encoded);
+    result
+}
+
+#[no_mangle]
+pub unsafe extern "C" fn handle_reply() {}
+
 gstd::metadata! {
     title: "Lottery",
         init:
@@ -142,4 +165,7 @@ gstd::metadata! {
         handle:
             input: Action,
             output: Event,
+        state:
+            input: State,
+            output: StateReply,
 }

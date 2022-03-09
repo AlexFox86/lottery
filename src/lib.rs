@@ -141,11 +141,17 @@ pub unsafe extern "C" fn meta_state() -> *mut [i32; 2] {
     let lottery: &mut Lottery = LOTTERY.get_or_insert(Lottery::default());
 
     let encoded = match query {
-        State::GetPlayers => {StateReply::Players(lottery.players.clone()).encode();           }
+        State::GetPlayers => StateReply::Players(lottery.players.clone()).encode(),
+        State::GetWinners => StateReply::Winners(lottery.lottery_history.clone()).encode(),          
         
         State::BalanceOf(index) => {
+            //let player = *lottery.players.get(&index).unwrap_or(&Player{player: ActorId::new([0u8; 32]), balance: 0,});
+
             if let Some(player) = lottery.players.get(&index) {
-                StateReply::Balance(player.balance).encode();
+                StateReply::Balance(player.balance).encode()
+            }
+            else{
+                StateReply::Balance(0).encode()
             }
         }
     };

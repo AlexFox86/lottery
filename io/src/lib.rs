@@ -4,7 +4,7 @@ use codec::{Decode, Encode};
 use gstd::{prelude::*, ActorId};
 use scale_info::TypeInfo;
 
-#[derive(Debug, Default, Encode, Decode, TypeInfo, Clone)]
+#[derive(Debug, Default, Encode, Decode, TypeInfo, Clone, Copy)]
 pub struct Player {
     pub player: ActorId,
     pub balance: u128,
@@ -30,14 +30,14 @@ pub enum Event {
 
 #[derive(Debug, Encode, Decode, TypeInfo)]
 pub enum State {
-    GetWinner,
+    GetWinners,
     GetPlayers,
     BalanceOf(u32),
 }
 
 #[derive(Debug, Encode, Decode, TypeInfo)]
 pub enum StateReply {
-    Winner(ActorId),
+    Winners(BTreeMap<u32, ActorId>),
     Players(BTreeMap<u32, Player>),
     Balance(u128),
 }

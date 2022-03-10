@@ -19,6 +19,11 @@ primitive-types = { version = "0.10.1", default-features = false, features = ["s
 sp-core = { version = "5.0.0", git = "https://github.com/gear-tech/substrate.git", branch = "gear-stable", default-features = false, features = ["full_crypto"] }
 lt-io = {path = "io"}
 
+[dev-dependencies]
+gtest = { git = "https://github.com/gear-tech/gear.git", rev = "e81b56a" }
+
+[build-dependencies]
+gear-wasm-builder = { git = "https://github.com/gear-tech/gear.git" }
 
 [profile.release]
 lto = true

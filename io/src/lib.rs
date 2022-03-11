@@ -4,6 +4,11 @@ use codec::{Decode, Encode};
 use gstd::{prelude::*, ActorId};
 use scale_info::TypeInfo;
 
+#[derive(Debug, Decode, Encode, TypeInfo)]
+pub struct InitConfig {
+    pub owner: ActorId,    
+}
+
 #[derive(Debug, Default, Encode, Decode, TypeInfo, Clone, Copy)]
 pub struct Player {
     pub player: ActorId,

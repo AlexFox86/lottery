@@ -1,5 +1,8 @@
 #![no_std]
 
+#[cfg(test)]
+mod tests;
+
 use lt_io::*;
 use codec::{Decode, Encode};
 use gstd::{debug, exec, msg, prelude::*, ActorId};
@@ -122,8 +125,9 @@ pub unsafe extern "C" fn handle() {
 
 #[no_mangle]
 pub unsafe extern "C" fn init() {
-    let owner: ActorId = msg::load().expect("Unable to decode Owner");
-    debug!("Owner {:?}", owner);
+    //let owner: ActorId = msg::load().expect("Unable to decode Owner");
+    //debug!("Owner {:?}", owner);
+    let config: InitConfig = msg::load().expect("Unable to decode InitConfig");
 
     let lottery = Lottery {
         lottery_owner: msg::source(),
@@ -167,7 +171,7 @@ pub unsafe extern "C" fn handle_reply() {}
 gstd::metadata! {
     title: "Lottery",
         init:
-            input: ActorId,
+            input: InitConfig,
         handle:
             input: Action,
             output: Event,

@@ -21,7 +21,3 @@ gtest = { git = "https://github.com/gear-tech/gear.git", rev = "e81b56a" }
 
 [build-dependencies]
 gear-wasm-builder = { git = "https://github.com/gear-tech/gear.git" }
-
-[profile.release]
-lto = true
-opt-level = 's'

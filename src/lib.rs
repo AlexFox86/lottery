@@ -71,20 +71,17 @@ impl Lottery {
     fn pick_winner(&mut self) {
         if self.players.len() > 0 {
             let index: u32 = self.get_random_number() % (self.players.len() as u32);
-
+            
+            //msg::reply(Event::Winner(0), 0);
             if let Some(win_player) = self.players.get(&index) {
-                msg::send_bytes(win_player.player, b"Winner", exec::value_available());
+                //msg::send_bytes(win_player.player, b"Winner", exec::value_available());
                 self.lottery_history
                     .insert(self.lottery_id, win_player.player);
-                msg::reply(Event::Winner(win_player.player), 0);
-            } else {
-                debug!("win player Index error");
+                msg::reply(Event::Winner(index), 0);
             }
 
             self.players = BTreeMap::new();
             self.lottery_id += 1;
-        } else{
-            debug!("no players in lottery");
         }
     }
 }
@@ -98,11 +95,12 @@ pub unsafe extern "C" fn handle() {
 
     match action {
         Action::Enter(account) => {
-            lottery.add_player(&account);
+            lottery.add_player(&account);            
         }
 
         Action::Start => {
             lottery.pick_winner();
+            //msg::reply(Event::Winner(1), 0);
         }
 
         Action::BalanceOf(index) => {

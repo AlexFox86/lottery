@@ -27,7 +27,7 @@ pub enum Action {
 
 #[derive(Debug, Encode, Decode, TypeInfo)]
 pub enum Event {
-    Winner(ActorId),                //Победитель
+    Winner(u32),                //Победитель
     Balance(u128),                  //Баланс
     Players(BTreeMap<u32, Player>), //Игроки
     PlayerAdded(u32),               //Игрок добавлен(Индекс)

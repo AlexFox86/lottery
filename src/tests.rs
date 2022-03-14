@@ -46,10 +46,10 @@ fn pick_winner() {
 
     let res3 = lt.send(USERS[0], Action::Start);   
     
-    println!("{:?}", res3.decoded_log::<lt_io::Event>());
+    println!("{:?}", res3.decoded_log::<Event>());
     
-    //assert!(res3.contains(&(USERS[0], Event::Winner(0).encode())));    
-    assert!(res3.contains(&(USERS[0], Event::Winner(1).encode())));    
+    assert!(res3.contains(&(USERS[0], Event::Winner(0).encode())));    
+    //assert!(res3.contains(&(USERS[0], Event::Winner(1).encode())));    
 }
 
 #[test]

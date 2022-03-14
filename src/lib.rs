@@ -70,15 +70,15 @@ impl Lottery {
 
     fn pick_winner(&mut self) {
         if self.players.len() > 0 {
-            let index: u32 = self.get_random_number() % (self.players.len() as u32);
+            //let index: u32 = self.get_random_number() % (self.players.len() as u32);
             
-            //msg::reply(Event::Winner(0), 0);
-            if let Some(win_player) = self.players.get(&index) {
+            msg::reply(Event::Winner(0), 0);
+            /*if let Some(win_player) = self.players.get(&index) {
                 //msg::send_bytes(win_player.player, b"Winner", exec::value_available());
                 self.lottery_history
                     .insert(self.lottery_id, win_player.player);
                 msg::reply(Event::Winner(index), 0);
-            }
+            }*/
 
             self.players = BTreeMap::new();
             self.lottery_id += 1;

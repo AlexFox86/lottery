@@ -6,10 +6,10 @@ use scale_info::TypeInfo;
 
 #[derive(Debug, Decode, Encode, TypeInfo)]
 pub struct InitConfig {
-    pub owner: ActorId,    
+    pub owner: ActorId,
 }
 
-#[derive(Debug, Default, Encode, Decode, TypeInfo, Clone, Copy)]
+#[derive(Debug, Default, Encode, Decode, TypeInfo, Clone)]
 pub struct Player {
     pub player: ActorId,
     pub balance: u128,
@@ -17,20 +17,27 @@ pub struct Player {
 
 #[derive(Debug, Decode, Encode, TypeInfo)]
 pub enum Action {
-    Enter(ActorId), //Новый игрок
-    Start,          //Запуск лотереи
-    BalanceOf(u32), //Запрос баланса
-    GetPlayers,     //Запрос списка
-    DelPlayer(u32), //Удалить игрока
-    AddValue(u32),  //Увеличить баланс
+    ///New player
+    Enter(ActorId),
+    ///Start lottery
+    Start,
+    ///Get balance
+    BalanceOf(u32),
+    ///Get players list
+    GetPlayers,
+    ///Remove player
+    DelPlayer(u32),
+    ///Add balance
+    AddValue(u32),
 }
 
 #[derive(Debug, Encode, Decode, TypeInfo)]
 pub enum Event {
-    Winner(u32),                //Победитель
-    Balance(u128),                  //Баланс
-    Players(BTreeMap<u32, Player>), //Игроки
-    PlayerAdded(u32),               //Игрок добавлен(Индекс)
+    Winner(u32),
+    Balance(u128),
+    Players(BTreeMap<u32, Player>),
+    ///Player added(Index)
+    PlayerAdded(u32),
 }
 
 #[derive(Debug, Encode, Decode, TypeInfo)]

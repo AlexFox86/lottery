@@ -3,18 +3,18 @@
 #[cfg(test)]
 mod tests;
 
-use lt_io::*;
 use codec::{Decode, Encode};
-use gstd::{debug, exec, msg, prelude::*, ActorId};
+use gstd::{exec, msg, prelude::*, ActorId};
+use lt_io::*;
 use scale_info::TypeInfo;
 use sp_core::hashing::blake2_256;
 
 #[derive(Debug, Default, Encode, Decode, TypeInfo)]
 struct Lottery {
-    lottery_owner: ActorId,                  //Хозяин лотереи
-    players: BTreeMap<u32, Player>,          //Игроки
-    lottery_history: BTreeMap<u32, ActorId>, //Список победителей
-    lottery_id: u32,                         //Id текущей лотереи
+    lottery_owner: ActorId,                  //Lottery owner
+    players: BTreeMap<u32, Player>,          //Players
+    lottery_history: BTreeMap<u32, ActorId>, //Winners list
+    lottery_id: u32,                         //Lottery Id
 }
 
 impl Lottery {
@@ -25,13 +25,13 @@ impl Lottery {
                 balance: msg::value(),
             };
 
-            let player_index: u32 = self.players.len() as u32;
+            let player_index = self.players.len() as u32;
             self.players.insert(player_index, player);
             msg::reply(Event::PlayerAdded(player_index), 0);
         }
     }
 
-    fn del_player(&mut self, index: u32) {
+    fn remove_player(&mut self, index: u32) {
         if self.players.len() > 0 {
             self.players.remove(&index);
         }
@@ -39,7 +39,7 @@ impl Lottery {
 
     fn add_value(&mut self, index: u32, value: u128) {
         self.players.entry(index).and_modify(|item| {
-            item.balance += value;
+            item.balance = item.balance.saturating_add(value);
         });
     }
 
@@ -61,8 +61,8 @@ impl Lottery {
         let u_buf = code_hash.to_fixed_bytes();
         let mut number: u32 = 0;
 
-        for &u_buf in u_buf.iter() {
-            number += u_buf as u32;
+        for u in u_buf {
+            number += u as u32;
         }
 
         number
@@ -70,15 +70,14 @@ impl Lottery {
 
     fn pick_winner(&mut self) {
         if self.players.len() > 0 {
-            //let index: u32 = self.get_random_number() % (self.players.len() as u32);
-            
-            msg::reply(Event::Winner(0), 0);
-            /*if let Some(win_player) = self.players.get(&index) {
-                //msg::send_bytes(win_player.player, b"Winner", exec::value_available());
+            let index: u32 = self.get_random_number() % (self.players.len() as u32);
+
+            if let Some(win_player) = self.players.get(&index) {
+                msg::send_bytes(win_player.player, b"Winner", exec::value_available());
                 self.lottery_history
                     .insert(self.lottery_id, win_player.player);
                 msg::reply(Event::Winner(index), 0);
-            }*/
+            }
 
             self.players = BTreeMap::new();
             self.lottery_id += 1;
@@ -95,7 +94,7 @@ pub unsafe extern "C" fn handle() {
 
     match action {
         Action::Enter(account) => {
-            lottery.add_player(&account);            
+            lottery.add_player(&account);
         }
 
         Action::Start => {
@@ -112,7 +111,7 @@ pub unsafe extern "C" fn handle() {
         }
 
         Action::DelPlayer(index) => {
-            lottery.del_player(index);
+            lottery.remove_player(index);
         }
 
         Action::AddValue(index) => {
@@ -123,15 +122,11 @@ pub unsafe extern "C" fn handle() {
 
 #[no_mangle]
 pub unsafe extern "C" fn init() {
-    //let owner: ActorId = msg::load().expect("Unable to decode Owner");
-    //debug!("Owner {:?}", owner);
     let config: InitConfig = msg::load().expect("Unable to decode InitConfig");
 
     let lottery = Lottery {
-        lottery_owner: msg::source(),
-        players: BTreeMap::new(),
-        lottery_history: BTreeMap::new(),
-        lottery_id: 0,
+        lottery_owner: config.owner,
+        ..Default::default()
     };
 
     LOTTERY = Some(lottery);
@@ -145,26 +140,20 @@ pub unsafe extern "C" fn meta_state() -> *mut [i32; 2] {
     let encoded = match query {
         State::GetPlayers => StateReply::Players(lottery.players.clone()).encode(),
         State::GetWinners => StateReply::Winners(lottery.lottery_history.clone()).encode(),
-        
+
         State::BalanceOf(index) => {
             //let player = *lottery.players.get(&index).unwrap_or(&Player{player: ActorId::new([0u8; 32]), balance: 0,});
 
             if let Some(player) = lottery.players.get(&index) {
                 StateReply::Balance(player.balance).encode()
-            }
-            else{
+            } else {
                 StateReply::Balance(0).encode()
             }
         }
     };
 
-    let result = gstd::macros::util::to_wasm_ptr(&(encoded[..]));
-    core::mem::forget(encoded);
-    result
+    gstd::util::to_leak_ptr(encoded)
 }
-
-#[no_mangle]
-pub unsafe extern "C" fn handle_reply() {}
 
 gstd::metadata! {
     title: "Lottery",

@@ -1,7 +1,10 @@
 #![no_std]
 
 #[cfg(test)]
-mod tests;
+mod simple_tests;
+
+#[cfg(test)]
+mod panic_tests;
 
 use codec::{Decode, Encode};
 use gstd::{debug, exec, msg, prelude::*, ActorId};

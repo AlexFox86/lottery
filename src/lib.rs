@@ -46,7 +46,9 @@ impl Lottery {
 
     fn enter(&mut self) {
         if self.lottery_is_on() && msg::value() > 0 {
-            if !self.players_timestamp.contains_key(&msg::source()) {
+            if let collections::btree_map::Entry::Vacant(new_player) =
+                self.players_timestamp.entry(msg::source())
+            {
                 let player = Player {
                     player_id: msg::source(),
                     balance: msg::value(),
@@ -54,8 +56,7 @@ impl Lottery {
 
                 let player_index = self.players.len() as u32;
                 self.players.insert(player_index, player);
-                self.players_timestamp
-                    .insert(msg::source(), exec::block_timestamp());
+                new_player.insert(exec::block_timestamp());
                 msg::reply(Event::PlayerAdded(player_index), 0);
             } else {
                 panic!("enter(): Player {:?} already added", msg::source());

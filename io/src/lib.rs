@@ -11,7 +11,7 @@ pub struct LotteryState {
     pub lottery_duration: u64,
 }
 
-#[derive(Debug, Default, Encode, Decode, TypeInfo, Clone)]
+#[derive(Debug, Default, Encode, Decode, TypeInfo, Clone, Copy)]
 pub struct Player {
     pub player_id: ActorId,
     pub balance: u128,

@@ -19,7 +19,6 @@ struct Lottery {
     lottery_state: LotteryState,
     lottery_owner: ActorId,
     players: BTreeMap<u32, Player>,
-    players_timestamp: BTreeMap<ActorId, u64>,
     lottery_history: BTreeMap<u32, ActorId>,
     lottery_id: u32,
 }
@@ -53,15 +52,18 @@ impl Lottery {
         }
     }
 
-    /// Adding a lottery player
+    /// Called by a player in order to participate in lottery
     /// Requirements:
-    /// * Lottery has started and lottery time has not expired
+    /// * Lottery must be on
     /// * Contribution must be greater than zero
-    /// * Player cannot be added again
+    /// * The player cannot enter the lottery more than once
     fn enter(&mut self) {
         if self.lottery_is_on() && msg::value() > 0 {
-            if let collections::btree_map::Entry::Vacant(new_player) =
-                self.players_timestamp.entry(msg::source())
+            if self
+                .players
+                .values()
+                .find(|player| player.player_id == msg::source())
+                .is_none()
             {
                 let player = Player {
                     player_id: msg::source(),
@@ -70,7 +72,6 @@ impl Lottery {
 
                 let player_index = self.players.len() as u32;
                 self.players.insert(player_index, player);
-                new_player.insert(exec::block_timestamp());
                 msg::reply(Event::PlayerAdded(player_index), 0);
             } else {
                 panic!("enter(): Player {:?} already added", msg::source());
@@ -97,7 +98,6 @@ impl Lottery {
                 if player.player_id == msg::source() {
                     msg::send_bytes(player.player_id, b"LeaveLottery", player.balance);
                     self.players.remove(&index);
-                    self.players_timestamp.remove(&msg::source());
                 } else {
                     panic!(
                         "leave_lottery(): ActorId's does not match: player: {:?}  msg::source(): {:?}",
@@ -173,22 +173,19 @@ impl Lottery {
                 <= exec::block_timestamp()
             && !self.players.is_empty()
         {
-            let index: u32 = self.get_random_number() % (self.players.len() as u32);
+            let index = (self.get_random_number() % (self.players.len() as u32)) as usize;
+            let win_player_index = self.players.keys().nth(index).expect("Player not found");
+            let player = self.players[&win_player_index];
 
-            if let Some(win_player) = self.players.get(&index) {
-                msg::send_bytes(win_player.player_id, b"Winner", exec::value_available());
-                self.lottery_history
-                    .insert(self.lottery_id, win_player.player_id);
-                msg::reply(Event::Winner(index), 0);
-            } else {
-                panic!("pick_winner(): Player {} not found", index);
-            }
+            msg::send_bytes(player.player_id, b"Winner", exec::value_available());
+            self.lottery_history
+                .insert(self.lottery_id, player.player_id);
+            msg::reply(Event::Winner(*win_player_index), 0);
 
             debug!("Winner: {}", index);
 
             self.lottery_state = LotteryState::default();
             self.players = BTreeMap::new();
-            self.players_timestamp = BTreeMap::new();
         } else {
             panic!(
                 "pick_winner(): Owner message: {}  lottery_duration: {}  players.is_empty(): {}",

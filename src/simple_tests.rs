@@ -2,6 +2,7 @@
 extern crate std;
 #[cfg(test)]
 use std::println;
+use std::time::{SystemTime, UNIX_EPOCH};
 
 use codec::Encode;
 use gstd::BTreeMap;
@@ -21,6 +22,17 @@ fn init(sys: &System) {
 
 #[test]
 fn start_lottery() {
+    let time = SystemTime::now()
+        .duration_since(UNIX_EPOCH)
+        .expect("Time went backwards")
+        .as_secs();
+
+    let state = LotteryState {
+        lottery_started: true,
+        lottery_start_time: time,
+        lottery_duration: 20000,
+    };
+
     let sys = System::new();
     init(&sys);
     let lt = sys.get_program(1);
@@ -28,7 +40,10 @@ fn start_lottery() {
     let res = lt.send(USERS[0], Action::StartLottery(20000));
     assert!(res.log().is_empty());
 
-    lt.send(USERS[0], Action::LotteryState);
+    println!("time: {}", time);
+
+    let res = lt.send(USERS[0], Action::LotteryState);
+    assert!(res.contains(&(USERS[0], Event::LotteryState(state).encode())));
 }
 
 #[test]
